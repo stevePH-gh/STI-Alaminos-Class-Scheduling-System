@@ -1,0 +1,236 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+<div class="mainDes">
+	<div class="logoCnt" style="font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif; background-color: yellow">
+		<img src="~/images/sti.png" style="height: 70px; float: left" /><h1 class="display-4" style="padding-left: 100px">Alaminos</h1>
+	</div>
+</div>
+
+<div class="loginBlock">
+	<div class="loginBlockCnt">
+		<h1>Welcome</h1>
+
+		<form method="post">
+			<input id="usernameBox" name="Email" type="text" placeholder="Email" value="@Model.Email" required />
+
+			<div class="passwordBox">
+				<input id="usernamePass" name="Password" type="password" placeholder="User Password" autocomplete="new-password" value="@Model.Password" required />
+				<span id="togglePass">
+					<img id="passVisBtn"
+						 src="/images/icons/icon_pass-show.png"
+						 data-show="/images/icons/icon_pass-show.png"
+						 data-hide="/images/icons/icon_pass-hide.png"
+						 alt="Show password" />
+				</span>
+			</div>
+
+			<!-- Display error message -->
+			@if (!string.IsNullOrEmpty(Model.Message))
+			{
+				<p style="color: red; text-align: center;">@Model.Message</p>
+			}
+
+			<button type="submit" class="btn btn-success">Login</button>
+			<!-- <a id="createAccount" asp-page="/Signup">Create Account</a> --> <!-- Commented for your own safety hehe -->
+			<a id="recoverAccount" class="forgot-link">Forgot Password?</a>
+		</form>
+		<p class="menuTabs" id="genericBB" onclick="window.location.href='@Url.Page("/Overview")'">Bypass Login</p>
+	</div>
+</div>
+
+<!-- Password Recovery Modal -->
+<div id="forgotModal" class="modal" style="display:none;">
+	<div class="modal-content">
+		<span class="close">&times;</span>
+		<h2>Password Recovery</h2>
+		<form method="post" asp-page-handler="Recover">
+			<input type="text" name="RecoverEmail" placeholder="Enter your email..." required />
+			<button type="submit" class="btn btn-success">Send Email</button>
+
+			@if (TempData["RecoverError"] != null)
+			{
+				<p style="color: yellow; margin-top:5px;">@TempData["RecoverError"]</p>
+			}
+		</form>
+
+		@if (TempData["RecoverMessage"] != null)
+		{
+			<p style="color: yellow;">@TempData["RecoverMessage"]</p>
+		}
+
+	</div>
+</div>
+
+<style>
+	.forgot-link {
+		text-decoration: underline;
+		color: yellow; /* normal color */
+		cursor: pointer;
+		transition: color 0.2s;
+	}
+
+		.forgot-link:hover {
+			color: #ffc107; /* color on hover */
+		}
+
+	.loginBlock {
+		display: flex;
+		align-items: center;
+		align-content: center;
+		justify-content: center;
+		height: 300px;
+		background-color: #eee;
+		border-radius: 10px;
+		color: white;
+	}
+
+	.loginBlockCnt {
+		background-color: #047eaf;
+		padding: 20px;
+		border-radius: 5px;
+	}
+
+	#usernameBox {
+		width: 221px;
+	}
+
+	.togglePass {
+		position: absolute;
+		right: 5px;
+		top: 50%;
+		transform: translateY(-50%);
+		cursor: pointer;
+	}
+
+	.passwordBox {
+		position: relative;
+		width: max-content;
+	}
+
+		.passwordBox input {
+			padding-right: 30px; /* makes space for the icon */
+		}
+
+	#togglePass {
+		position: absolute;
+		right: 5px;
+		top: 50%;
+		transform: translateY(-50%);
+		cursor: pointer;
+	}
+
+	#passVisBtn {
+		width: 20px;
+		height: 20px;
+		object-fit: contain;
+	}
+
+	#buttonLogin {
+		display: inline-block;
+	}
+
+	#createAccount {
+		color: white;
+	}
+
+	.modal {
+		position: fixed;
+		z-index: 1000;
+		left: 0;
+		top: 0;
+		width: 100%;
+		height: 100%;
+		overflow: auto;
+		background-color: rgba(0,0,0,0.5);
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.modal-content {
+		background-color: #047eaf;
+		padding: 20px;
+		border-radius: 10px;
+		width: 300px;
+		color: white;
+		text-align: center;
+	}
+
+	.close {
+		color: white;
+		float: right;
+		font-size: 24px;
+		font-weight: bold;
+		cursor: pointer;
+	}
+
+		.close:hover {
+			color: #ccc;
+		}
+
+	.modal input {
+		width: 90%;
+		padding: 8px;
+		margin: 10px 0;
+		border-radius: 5px;
+		border: none;
+	}
+
+	.modal button {
+		padding: 8px 12px;
+		border-radius: 5px;
+		border: none;
+		background-color: cornflowerblue;
+		color: black;
+		cursor: pointer;
+	}
+
+		.modal button:hover {
+			background-color: darkblue;
+		}
+</style>
+
+<script>
+	document.addEventListener('DOMContentLoaded', () => {
+		const modal = document.getElementById('forgotModal');
+		const openBtn = document.getElementById('recoverAccount');
+		const closeBtn = document.querySelector('.close');
+
+		openBtn.onclick = () => modal.style.display = 'flex';
+		closeBtn.onclick = () => modal.style.display = 'none';
+		window.onclick = e => { if(e.target == modal) modal.style.display = 'none'; };
+
+		// Show modal automatically if there's an error
+		const recoverError = '@TempData["RecoverError"]';
+		if(recoverError && recoverError.trim() !== "") {
+			modal.style.display = 'flex';
+		}
+
+		// Show toast if success
+		const recoverSuccess = '@TempData["RecoverSuccess"]';
+		if(recoverSuccess && recoverSuccess.trim() !== "") {
+			const banner = document.createElement("div");
+			banner.textContent = recoverSuccess;
+			banner.style.position = "fixed";
+			banner.style.top = "-60px";
+			banner.style.left = "50%";
+			banner.style.transform = "translateX(-50%)";
+			banner.style.background = "#2ecc71";
+			banner.style.color = "#fff";
+			banner.style.padding = "12px 24px";
+			banner.style.borderRadius = "6px";
+			banner.style.boxShadow = "0 4px 10px rgba(0,0,0,0.2)";
+			banner.style.fontWeight = "bold";
+			banner.style.transition = "top 0.5s ease-in-out";
+			banner.style.zIndex = 9999;
+			document.body.appendChild(banner);
+
+			setTimeout(() => { banner.style.top = "20px"; }, 50);
+			setTimeout(() => { banner.style.top = "-60px"; }, 4050);
+		}
+	});
+
+</script>

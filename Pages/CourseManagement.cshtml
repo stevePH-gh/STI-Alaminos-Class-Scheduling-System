@@ -1,0 +1,240 @@
+﻿@page
+@model Class_Management.Pages.CourseManagementModel
+@{
+}
+
+<!--
+<div class="mainDes">
+    <div class="logoCnt" style="font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif; background-color: yellow">
+        <img src="~/images/sti.png" style="height: 70px; float: left" />
+        <h1 class="display-4" style="padding-left: 100px">Alaminos</h1>
+    </div>
+</div>
+-->
+
+<h1><b>Course Management</b></h1>
+
+<div class="formContainer">
+    <h3>Add Course</h3>
+    <form method="post">
+        <div class="row">
+            <div style="flex:1; display:flex; flex-direction:column;">
+                <p style="margin:0 0 5px 0;">Course Name</p>
+                <input asp-for="NewCourse.Name" placeholder="Enter course name" autocomplete="off" id="courseNameInput" />
+                <span asp-validation-for="NewCourse.Name" class="text-danger"></span>
+            </div>
+        </div>
+
+        @section Scripts {
+            <partial name="_ValidationScriptsPartial" />
+        }
+
+        @if (!string.IsNullOrEmpty(Model.Message))
+        {
+            <p style="color:red">@Model.Message</p>
+        }
+
+        <div class="row btnRow">
+            <button type="submit" class="btnCreate">Add Course</button>
+            <button type="button" class="btnBack" onclick="window.location.href='@Url.Page("/Overview")'">Back</button>
+        </div>
+    </form>
+</div>
+
+<h3>Existing Courses</h3>
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Course Name</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var course in Model.Courses)
+        {
+            <tr>
+                <td>@course.Id</td>
+                <td>@course.Name</td>
+                <td>
+                    <button type="button"
+                            class="btnDelete"
+                            onclick="openFirstConfirm(@course.Id)">
+                        Delete
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- FIRST CONFIRM POPUP -->
+<div id="confirmModal1" class="modal" style="display:none;">
+    <div class="modal-content">
+        <h3>Confirm Delete</h3>
+        <p>Are you sure you want to delete this course?</p>
+        <button class="btnDelete" onclick="openSecondConfirm()">Yes</button>
+        <button class="btnBack" onclick="closeFirstConfirm()">Cancel</button>
+    </div>
+</div>
+
+<!-- SECOND CONFIRM POPUP -->
+<div id="confirmModal2" class="modal" style="display:none;">
+    <div class="modal-content">
+        <h3>Final Confirmation</h3>
+        <p>Type <b>DELETE</b> to confirm:</p>
+        <input id="deleteVerifyInput" type="text" placeholder="Type DELETE" style="padding:10px; width:80%;" />
+        <form id="finalDeleteForm" method="post" asp-page-handler="Delete" style="margin-top:15px;">
+            <input type="hidden" id="finalDeleteId" name="id" />
+            <button type="submit" class="btnDelete" id="finalDeleteBtn" disabled>Confirm Delete</button>
+            <button type="button" class="btnBack" onclick="closeSecondConfirm()">Cancel</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // FORCE CAPITAL LETTERS AS YOU TYPE
+    document.getElementById("courseNameInput").addEventListener("input", function() {
+        this.value = this.value.toUpperCase();
+    });
+
+    // DELETE MODALS
+    let currentDeleteId = 0;
+
+    function openFirstConfirm(id) {
+        currentDeleteId = id;
+        document.getElementById("confirmModal1").style.display = "flex";
+    }
+
+    function closeFirstConfirm() {
+        document.getElementById("confirmModal1").style.display = "none";
+    }
+
+    function openSecondConfirm() {
+        closeFirstConfirm();
+        document.getElementById("confirmModal2").style.display = "flex";
+        document.getElementById("finalDeleteId").value = currentDeleteId;
+        document.getElementById("deleteVerifyInput").value = "";
+        document.getElementById("finalDeleteBtn").disabled = true;
+    }
+
+    function closeSecondConfirm() {
+        document.getElementById("confirmModal2").style.display = "none";
+    }
+
+    document.addEventListener("input", function () {
+        const input = document.getElementById("deleteVerifyInput").value.trim();
+        const btn = document.getElementById("finalDeleteBtn");
+        btn.disabled = (input !== "DELETE");
+    });
+</script>
+
+<style>
+    /* MODAL */
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        width: 400px;
+        max-width: 90%;
+        text-align: center;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+
+    .formContainer {
+        margin-top: 20px;
+        padding: 20px;
+        border-radius: 8px;
+        background-color: #eee;
+    }
+
+    .row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    input {
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        flex: 1;
+        font-size: 14px;
+    }
+
+        input:focus {
+            outline: none;
+            border-color: #035f82;
+            box-shadow: 0 0 4px rgba(3,95,130,0.3);
+        }
+
+    .btnCreate {
+        background-color: #047eaf;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+        .btnCreate:hover {
+            background-color: #035f82;
+        }
+
+    .btnDelete {
+        background-color: #c62828;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+        .btnDelete:hover {
+            background-color: #a61c1c;
+        }
+
+    .btnBack {
+        background-color: gray;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+        .btnBack:hover {
+            background-color: #555;
+        }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+        background-color: white;
+    }
+
+        table th, table td {
+            border: 1px solid #ccc;
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        table th {
+            background-color: #f0f0f0;
+        }
+</style>

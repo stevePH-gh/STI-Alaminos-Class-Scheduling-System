@@ -1,0 +1,137 @@
+﻿@page
+@model Class_Management.Pages.SignupModel
+@{
+}
+<!--
+<div class="mainDes">
+    <div class="logoCnt" style="font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif; background-color: yellow">
+        <img src="~/images/sti.png" style="height: 70px; float: left" />
+        <h1 class="display-4" style="padding-left: 100px">Alaminos</h1>
+    </div>
+</div>
+-->
+
+<div class="signupBlock">
+    <div class="signupBlockCnt">
+        <h1 style="color:white">Sign Up</h1>
+
+        <form method="post"> <!-- Working -->
+            <input asp-for="NewUser.Email" placeholder="Enter Email" autocomplete="off" />
+
+            <div class="row">
+                <input asp-for="NewUser.LastName" placeholder="Last Name" autocomplete="off" />
+                <input asp-for="NewUser.FirstName" placeholder="First Name" autocomplete="off" />
+            </div>
+
+            <div class="row">
+                <input asp-for="NewUser.Birthday" type="date" autocomplete="off" />
+                <select asp-for="NewUser.Sex">
+                    <option value="" disabled selected>Sex</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                </select>
+            </div>
+
+            <div class="row">
+                <input asp-for="NewUser.Password" type="password" placeholder="Create Password" autocomplete="new-password" />
+                <input asp-for="ConfirmPassword" type="password" placeholder="Confirm Password" autocomplete="new-password" />
+            </div>
+
+            <!-- This will show the error message -->
+            @if (!string.IsNullOrEmpty(Model.Message))
+            {
+                <p style="color: yellow; text-align: center;">@Model.Message</p>
+            }
+
+            <div class="row btnRow">
+                <button type="button" class="btnBack" onclick="window.location.href='@Url.Page("/Overview")'">Back</button>
+                <button type="submit" class="btnCreate">Create Account</button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<style>
+    form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px; /* adds space between the rows and inputs */
+    }
+
+    .signupBlock {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    .signupBlockCnt {
+        background-color: #047eaf;
+        padding: 20px;
+        border-radius: 5px;
+    }
+
+        .signupBlockCnt h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #222;
+        }
+
+    input, select {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+
+        input:focus, select:focus {
+            border-color: #047eaf;
+            outline: none;
+            box-shadow: 0 0 4px rgba(4, 126, 175, 0.3);
+        }
+
+    .row {
+        display: flex;
+        gap: 10px;
+    }
+
+        .row input, .row select {
+            flex: 1;
+        }
+
+    .btnRow {
+        margin-top: 10px;
+    }
+
+        .btnRow button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+    .btnBack {
+        background-color: #ccc;
+        color: #333;
+    }
+
+        .btnBack:hover {
+            background-color: #b0b0b0;
+        }
+
+    .btnCreate {
+        background-color: #047eaf;
+        color: #fff;
+    }
+
+        .btnCreate:hover {
+            background-color: #036a92;
+        }
+</style>

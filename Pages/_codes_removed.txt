@@ -1,0 +1,211 @@
+﻿
+
+ACCESS THE WHOLE WITHOUT LOGGING IN:
+<p class="menuTabs" onclick="window.location.href='@Url.Page("/Overview")'">Bypass</p>
+
+                                                            // BELOW ARE THE CODES REMOVED FROM .cshtml and .cshtml.cs files
+
+
+        [ REMOVAL ID: Acshtml tbody ] : Admin.cshtml
+            @foreach (var user in Model.Users)
+            {
+                <tr>
+                    <td>@user.Id</td>
+                    <td>@user.Email</td>
+                    <td>@user.FirstName @user.LastName</td>
+                    <td>@(string.IsNullOrEmpty(user.Role) ? "Student" : user.Role)</td>
+                </tr>
+            }
+
+        [REMOVAL ID: ]
+
+
+
+        
+
+
+<!-- 
+<div class="tabPanels" id="admAccPanel">
+    <div id="regAccSection" style="display: flex; flex-direction: column; align-items: flex-start;">
+        <h3 style="margin: 0;"><b>Registered Accounts</b></h3>
+        <p style="color: red; margin-top: 5px; font-size: 14px;">
+            *Note: "std" and "Student" have the same role
+        </p>
+    </div>
+
+    <table class="userTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Email</th>
+                <th>Name</th>
+                <th>Role</th>
+            </tr>
+        </thead>
+        <tbody>
+                    [REMOVAL ID: Acshtml tbody]
+        </tbody>
+    </table>
+</div>
+
+-->
+
+                    [ REMOVAL ID: sitecss001 ]
+
+                                                   /* SUBJECTS BUTTON */
+#subjectsBtnInfo {
+    display: none; /* hidden at first */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    min-width: 250px;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    z-index: 1000;
+
+}
+
+                            /* SCHEDUle ui */
+                    /* DO NOT TOUCH SENSITIVE CODE */
+
+.popup {
+    position: fixed;
+    top: 20px;
+    right: -320px; /* start hidden off-screen */
+    width: 280px;
+    background: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    padding: 15px;
+    border-radius: 6px;
+    transition: right 0.3s ease; /* smooth slide */
+    z-index: 1000;
+}
+
+    .popup.show {
+        right: 20px; /* slide in nicely with some margin */
+    }
+
+    .popup label {
+        font-weight: bold;
+        margin-top: 10px;
+    }
+
+    .popup input {
+        padding: 6px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        width: 100%; /* stretch inputs */
+        box-sizing: border-box;
+    }
+
+    .popup button {
+        margin-top: 10px;
+        padding: 8px;
+        border: none;
+        background: #0078d7;
+        color: white;
+        border-radius: 4px;
+        cursor: pointer;
+        width: 100%;
+    }
+
+        .popup button:hover {
+            background: #005fa3;
+        }
+
+hr.lineEnd {
+    border: none;
+    height: 2px;
+    color: black;
+    background: black;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    margin: 20px 0;
+}
+
+
+
+                            /* ROOM PROPRERTIES */
+
+.roomCnt {
+    grid-column: span 4 / span 4;
+    grid-row: span 3 / span 3;
+    grid-column-start: 2;
+    grid-row-start: 3;
+    
+}
+
+.roomImg {
+    max-height: 100%;
+    max-width: 100%;
+}
+
+    /* ROOM SCHDEULE SHOW HOVER */
+
+    .scheduleList {
+        display: none;
+        position: fixed;
+        background: #fff;
+        border: 1px solid #ddd;
+        padding: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        border-radius: 4px;
+        font-size: 14px;
+        max-width: 250px;
+        z-index: 10;
+}
+
+
+                            /* ACCOUNT DES */
+
+.accountCnt {
+    grid-column: span 2 / span 2;
+    grid-column-start: 5;
+    grid-row-start: 1;
+    
+}
+
+                            /* ROOM SELECTIOON UI AND DESIGN */
+
+.roomSel {
+    grid-column-start: 5;
+    grid-row-start: 2;
+    border: 2px;
+}
+
+.room {
+    border: 2px;
+}
+
+                            /* CONFLICT POP UP */
+
+.conflict-popup {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5); /* dark overlay */
+}
+
+.conflict-content {
+    background: #fff;
+    margin: 15% auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 350px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+.conflict-close {
+    float: right;
+    font-size: 20px;
+    cursor: pointer;
+}

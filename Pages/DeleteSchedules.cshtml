@@ -1,0 +1,222 @@
+﻿@page
+@model Class_Management.Pages.DeleteSchedulesModel
+@{
+}
+
+<!--
+<div class="mainDes">
+    <div class="logoCnt" style="font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif; background-color: yellow">
+        <img src="~/images/sti.png" style="height: 70px; float: left" />
+        <h1 class="display-4" style="padding-left: 100px">Alaminos</h1>
+    </div>
+</div>
+-->
+
+<h1><b>Schedules Management</b></h1>
+<p class="menuTabs" id="genericBB" onclick="window.location.href='@Url.Page("/Overview")'"><= Back</p>
+
+<div class="testBgc">
+
+    <form method="post" asp-page-handler="ExportAll">
+        <button type="submit" class="exportBtn" style="width:100%; margin-bottom:15px;">Export</button>
+    </form>
+
+    <form method="post" asp-page-handler="ExportAndDelete">
+        <button type="button" class="exportBtn" onclick="openBatchDelete()">Export & Delete</button>
+    </form>
+
+@foreach (var day in Model.Days)
+{
+    <h2>@day</h2>
+    <div class="tableContainer">
+
+
+        <table class="scheduleTable">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Instructor</th>
+                    <th>Subject</th>
+                    <th>Section</th>
+                    <th>Type</th>
+                    <th>Room</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    var schedules = Model.GetSchedulesByDay(day);
+                }
+
+                @foreach (var s in schedules)
+                {
+                    <tr>
+                        <td>@s.Start - @s.End</td>
+                        <td>@s.Instructor</td>
+                        <td>@s.Subject</td>
+                        <td>@s.Section</td>
+                        <td>@s.Type</td>
+                        <td>@s.Room</td>
+                        <td>
+                            <form method="post" asp-page-handler="Delete" asp-route-day="@day" asp-route-id="@s.Id">
+                                <button type="button" class="deleteBtn" onclick="openConfirm('@day', @s.Id)">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div id="confirmModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <h3>Confirm Delete</h3>
+        <p>Are you sure you want to delete this schedule?</p>
+
+        <form method="post" asp-page-handler="Delete">
+            <input type="hidden" id="modalDay" name="day" />
+            <input type="hidden" id="modalId" name="id" />
+
+            <button type="submit" class="deleteBtn">Yes, Delete</button>
+            <button type="button" class="btnBack" onclick="closeConfirm()">Cancel</button>
+        </form>
+    </div>
+</div>
+
+<!-- BATCH DELETE MODAL -->
+<div id="batchDeleteModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <h3>Export and Delete Schedules</h3>
+        <p>To prevent accidental deletion, we rcommend to export all schedules first</p>
+        <p>Manual page refresh needed after the Excel file was exported</p>
+
+        <form method="post" asp-page-handler="ExportAndDelete">
+            <label><input type="checkbox" name="daysToDelete" value="Monday"> Monday</label><br>
+            <label><input type="checkbox" name="daysToDelete" value="Tuesday"> Tuesday</label><br>
+            <label><input type="checkbox" name="daysToDelete" value="Wednesday"> Wednesday</label><br>
+            <label><input type="checkbox" name="daysToDelete" value="Thursday"> Thursday</label><br>
+            <label><input type="checkbox" name="daysToDelete" value="Friday"> Friday</label><br>
+            <label><input type="checkbox" name="daysToDelete" value="Saturday"> Saturday</label><br><br>
+
+            <button type="submit" class="deleteBtn" style="width:100%;">Export & Delete</button>
+            <button type="button" class="btnBack" onclick="closeBatchDelete()">Cancel</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openConfirm(day, id) {
+        document.getElementById("modalDay").value = day;
+        document.getElementById("modalId").value = id;
+        document.getElementById("confirmModal").style.display = "flex";
+    }
+
+    function closeConfirm() {
+        document.getElementById("confirmModal").style.display = "none";
+    }
+
+    function openBatchDelete() {
+        document.getElementById("batchDeleteModal").style.display = "flex";
+    }
+    function closeBatchDelete() {
+        document.getElementById("batchDeleteModal").style.display = "none";
+    }
+</script>
+
+
+<style>
+    .testBgc {
+        background-color: #eee;
+        border-radius: 10px;
+        padding: 25px;
+        margin: auto;
+        margin-top: 20px;
+    }
+
+    .scheduleTable {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 30px;
+    }
+
+        .scheduleTable th, .scheduleTable td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .scheduleTable th {
+            background-color: #047eaf;
+            color: white;
+        }
+
+    .deleteBtn {
+        background-color: #e74c3c;
+        color: white;
+        border: none;
+        padding: 6px 10px;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+
+        .deleteBtn:hover {
+            background-color: #c0392b;
+        }
+
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        width: 400px;
+        max-width: 90%;
+        text-align: center;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+
+    .tableContainer {
+        width: 100%; /* make container full width */
+        margin-bottom: 30px;
+    }
+
+        .tableContainer .exportBtn {
+            width: 100%;
+            margin-bottom: 6px;
+            padding: 10px 0;
+            font-weight: bold;
+        }
+
+    .exportBtn {
+        background-color: #2ecc71;
+        color: white;
+        border: none;
+        padding: 12px;
+        cursor: pointer;
+        border-radius: 4px;
+        width: 100%;
+        margin-bottom: 25px;
+        font-size: 17px;
+        font-weight: bold;
+    }
+
+
+        .exportBtn:hover {
+            background-color: #27ae60;
+        }
+</style>

@@ -1,0 +1,274 @@
+﻿@page
+@model Class_Management.Pages.SubjectManagementModel
+@{
+}
+
+<!--
+<div class="mainDes">
+    <div class="logoCnt" style="font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif; background-color: yellow">
+        <img src="~/images/sti.png" style="height: 70px; float: left" />
+        <h1 class="display-4" style="padding-left: 100px">Alaminos</h1>
+    </div>
+</div>
+-->
+
+<h1><b>Subject Management</b></h1>
+
+<div class="formContainer">
+    <h3>Add Subject</h3>
+    <form method="post">
+        <div class="row">
+            <!-- Subject Name + Code -->
+            <div style="flex:2; display:flex; flex-direction:column;">
+                <p style="margin:0 0 5px 0;">Subject Name</p>
+                <input asp-for="NewSubject.SubjectName" placeholder="Enter Subject Name" autocomplete="off" />
+                <span asp-validation-for="NewSubject.SubjectName" class="text-danger"></span>
+            </div>
+
+            <div style="flex:1; display:flex; flex-direction:column;">
+                <p style="margin:0 0 5px 0;">Subject Code</p>
+                <input asp-for="NewSubject.Code"
+                       placeholder="eg. INTE1012"
+                       autocomplete="off"
+                       oninput="this.value = this.value.toUpperCase()"
+                       onpaste="setTimeout(() => this.value = this.value.toUpperCase(), 0)" />
+                <span asp-validation-for="NewSubject.Code" class="text-danger"></span>
+            </div>
+
+
+            <div style="flex:1; display:flex; flex-direction:column;">
+                <p style="margin:0 0 5px 0;">Type / Course</p>
+                <select asp-for="NewSubject.Type">
+                    <option value="" disabled selected>Select Course</option>
+                    @foreach (var course in Model.Courses)
+                    {
+                        <option value="@course.Name">@course.Name</option>
+                    }
+                    <option value="Generic Subject">Generic Subject</option>
+                </select>
+                <span asp-validation-for="NewSubject.Type" class="text-danger"></span>
+            </div>
+
+        </div>
+
+        @section Scripts {
+            <partial name="_ValidationScriptsPartial" />
+        }
+
+        <!-- Optional: display validation message -->
+        @if (!string.IsNullOrEmpty(Model.Message))
+        {
+            <p style="color:red">@Model.Message</p>
+        }
+
+        <div class="row btnRow">
+            <button type="submit" class="btnCreate">Add Subject</button>
+            <button type="button" class="btnBack" onclick="window.location.href='@Url.Page("/Overview")'">Back</button>
+        </div>
+    </form>
+</div>
+
+<h3>Existing Subjects</h3>
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Subject Name</th>
+            <th>Code</th>
+            <th>Course/Type</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var subject in Model.Subjects)
+        {
+            <tr>
+                <td>@subject.Id</td>
+                <td>@subject.SubjectName</td>
+                <td>@subject.Code</td>
+                <td>@subject.Type</td>
+                <td>
+                    <button type="button"
+                            class="btnDelete"
+                            onclick="openFirstConfirm(@subject.Id)">
+                        Delete
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- FIRST CONFIRM POPUP -->
+<div id="confirmModal1" class="modal" style="display:none;">
+    <div class="modal-content">
+        <h3>Confirm Delete</h3>
+        <p>Are you sure you want to delete this subject?</p>
+        <button class="btnDelete" onclick="openSecondConfirm()">Yes</button>
+        <button class="btnBack" onclick="closeFirstConfirm()">Cancel</button>
+    </div>
+</div>
+
+<!-- SECOND CONFIRM POPUP -->
+<div id="confirmModal2" class="modal" style="display:none;">
+    <div class="modal-content">
+        <h3>Final Confirmation</h3>
+        <p>Type <b>DELETE</b> to confirm:</p>
+        <input id="deleteVerifyInput" type="text" placeholder="Type DELETE" style="padding:10px; width:80%;" />
+        <form id="finalDeleteForm" method="post" asp-page-handler="Delete" style="margin-top:15px;">
+            <input type="hidden" id="finalDeleteId" name="id" />
+            <button type="submit" class="btnDelete" id="finalDeleteBtn" disabled>Confirm Delete</button>
+            <button type="button" class="btnBack" onclick="closeSecondConfirm()">Cancel</button>
+        </form>
+    </div>
+</div>
+
+
+<script>
+    let currentDeleteId = 0;
+
+    function openFirstConfirm(id) {
+        currentDeleteId = id;
+        document.getElementById("confirmModal1").style.display = "flex";
+    }
+
+    function closeFirstConfirm() {
+        document.getElementById("confirmModal1").style.display = "none";
+    }
+
+    function openSecondConfirm() {
+        closeFirstConfirm();
+        document.getElementById("confirmModal2").style.display = "flex";
+        document.getElementById("finalDeleteId").value = currentDeleteId;
+        document.getElementById("deleteVerifyInput").value = "";
+        document.getElementById("finalDeleteBtn").disabled = true;
+    }
+
+    function closeSecondConfirm() {
+        document.getElementById("confirmModal2").style.display = "none";
+    }
+
+    document.addEventListener("input", function () {
+        const input = document.getElementById("deleteVerifyInput").value.trim();
+        const btn = document.getElementById("finalDeleteBtn");
+        btn.disabled = (input !== "DELETE");
+    });
+</script>
+
+
+<style>
+    /* Modal overlay */
+    .modal {
+        position: fixed; /* Fixes the modal over the page */
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5); /* semi-transparent background */
+        display: none; /* hidden by default */
+        justify-content: center; /* center modal box horizontally */
+        align-items: center; /* center modal box vertically */
+        z-index: 1000; /* make sure it’s on top */
+    }
+
+    /* Modal box */
+    .modal-content {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        width: 400px; /* or whatever width you want */
+        max-width: 90%;
+        text-align: center;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+
+    .formContainer {
+        margin-top: 20px;
+        padding: 20px;
+        border-radius: 8px;
+        background-color: #eee;
+        color: black;
+    }
+
+    .row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    input, select {
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        flex: 1;
+        font-size: 14px;
+    }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #035f82;
+            box-shadow: 0 0 4px rgba(3,95,130,0.3);
+        }
+
+    .btnCreate {
+        background-color: #047eaf;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+        .btnCreate:hover {
+            background-color: #035f82;
+        }
+
+    .btnBack {
+        background-color: gray;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+        .btnBack:hover {
+            background-color: #555;
+        }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+        background-color: white;
+        color: black;
+    }
+
+        table th, table td {
+            border: 1px solid #ccc;
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        table th {
+            background-color: #f0f0f0;
+        }
+
+    p {
+        margin: 5px 0;
+    }
+
+    .btnDelete {
+        background-color: #c62828;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+        .btnDelete:hover {
+            background-color: #a61c1c;
+        }
+</style>

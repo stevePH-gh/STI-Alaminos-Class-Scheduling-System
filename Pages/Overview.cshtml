@@ -1,0 +1,306 @@
+﻿@page
+@model Class_Management.Pages.OverviewModel
+@{
+}
+
+
+<div class="mainDes">
+    <div class="logoCnt" style="font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif; background-color: yellow">
+        <img src="~/images/sti.png" style="height: 70px; float: left" />
+        <h1 class="display-4" style="padding-left: 100px">Alaminos</h1>
+    </div>
+</div>
+
+
+<h1><b>Class Scheduling System</b></h1>
+
+<!-- 
+<div class="admPanels">
+    <div class="admMenu">
+        <p><b>Program</b></p>
+        <button class="sideBtn" onclick="window.location.href='@Url.Page("/Admin")'">Draft a Schedule</button>
+        <button class="sideBtn" onclick="window.location.href='@Url.Page("/DeleteSchedules")'">Manage Schedules</button>
+        <button class="sideBtn" onclick="window.location.href='@Url.Page("/InstructorLoading")'">Insctructor Management</button>
+        <button class="sideBtn" onclick="window.location.href='@Url.Page("/RoomManagement")'">Room Management</button>
+        <button class="sideBtn" onclick="window.location.href='@Url.Page("/SubjectManagement")'">Subjects Management</button>
+        <button class="sideBtn" onclick="window.location.href='@Url.Page("/CourseManagement")'">Course Management</button>
+        <button class="sideBtn" onclick="window.location.href='@Url.Page("/Signup")'">Account</button>
+    </div>
+</div>
+-->
+
+<div class="admPanels">
+    <div class="admMenu">
+        <p><b>Program</b></p>
+        <button class="sideBtn" onclick="window.location.href='@Url.Page("/Admin")'">Draft a Schedule</button>
+        <button class="sideBtn" onclick="window.location.href='@Url.Page("/DeleteSchedules")'">Manage Schedules</button>
+        <button class="sideBtn" onclick="window.location.href='@Url.Page("/InstructorLoading")'">Instructor Management</button>
+        <button class="sideBtn" onclick="window.location.href='@Url.Page("/RoomManagement")'">Room Management</button>
+        <button class="sideBtn" onclick="window.location.href='@Url.Page("/SubjectManagement")'">Subjects Management</button>
+        <button class="sideBtn" onclick="window.location.href='@Url.Page("/CourseManagement")'">Course Management</button>
+        <button class="sideBtn" onclick="window.location.href='@Url.Page("/Signup")'">Create Account</button>
+        <button class="sideBtn" onclick="window.location.href='@Url.Page("/Accounts")'">Manage Account</button>
+    </div>
+
+    <!-- RIGHT PANEL FOR SCHEDULES -->
+    <div class="schedulePanel">
+        <h3><b>SCHEDULES:</b></h3>
+
+        @foreach (var day in Model.Days)
+        {
+            <h3>@day</h3>
+
+            @* --- ROOMS --- *@
+            <div class="categoryContainer">
+                <div class="categoryBtnsRow">
+                    @foreach (var room in Model.RoomsPerDay[day])
+                    {
+                        <button class="toggleBtn blueBtn" data-type="room" data-day="@day" data-name="@room">
+                            @room
+                        </button>
+                    }
+                </div>
+                @foreach (var room in Model.RoomsPerDay[day])
+                {
+                    <div class="scheduleTableContainer" id="room-@day-@room.Replace(" ", "_")" style="display:none;">
+                        <table class="scheduleTable">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Subject</th>
+                                    <th>Section</th>
+                                    <th>Instructor</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var s in Model.SchedulesByDay[day].Where(x => x.Room == room).OrderBy(x => x.Start))
+                                {
+                                    <tr>
+                                        <td>@s.Start.ToString(@"h\:mm") - @s.End.ToString(@"h\:mm")</td>
+                                        <td>@s.Subject</td>
+                                        <td>@s.Section</td>
+                                        <td>@s.Instructor</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+
+            @* --- INSTRUCTORS --- *@
+            <div class="categoryContainer">
+                <div class="categoryBtnsRow">
+                    @foreach (var instr in Model.InstructorsPerDay[day])
+                    {
+                        <button class="toggleBtn blueBtn" data-type="instructor" data-day="@day" data-name="@instr">
+                            @instr
+                        </button>
+                    }
+                </div>
+                @foreach (var instr in Model.InstructorsPerDay[day])
+                {
+                    <div class="scheduleTableContainer" id="instructor-@day-@instr.Replace(" ", "_")" style="display:none;">
+                        <table class="scheduleTable">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Room</th>
+                                    <th>Subject</th>
+                                    <th>Section</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var s in Model.SchedulesByDay[day].Where(x => x.Instructor == instr).OrderBy(x => x.Start))
+                                {
+                                    <tr>
+                                        <td>@s.Start.ToString(@"h\:mm") - @s.End.ToString(@"h\:mm")</td>
+                                        <td>@s.Room</td>
+                                        <td>@s.Subject</td>
+                                        <td>@s.Section</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+
+            @* --- SECTIONS --- *@
+            <div class="categoryContainer">
+                <div class="categoryBtnsRow">
+                    @foreach (var sec in Model.AllSections)
+                    {
+                        <button class="toggleBtn blueBtn" data-type="section" data-day="@day" data-name="@sec">
+                            @sec
+                        </button>
+                    }
+                </div>
+                @foreach (var sec in Model.AllSections)
+                {
+                    <div class="scheduleTableContainer" id="section-@day-@sec.Replace(" ", "_")" style="display:none;">
+                        <table class="scheduleTable">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Subject</th>
+                                    <th>Instructor</th>
+                                    <th>Room</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var s in Model.SchedulesByDay[day].Where(x => x.Section == sec).OrderBy(x => x.Start))
+                                {
+                                    <tr>
+                                        <td>@s.Start.ToString(@"h\:mm") - @s.End.ToString(@"h\:mm")</td>
+                                        <td>@s.Subject</td>
+                                        <td>@s.Instructor</td>
+                                        <td>@s.Room</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+
+<script>
+    document.querySelectorAll(".toggleBtn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const type = btn.getAttribute("data-type");
+            const day = btn.getAttribute("data-day");
+            const name = btn.getAttribute("data-name").replace(/\s/g, "_"); // sanitize spaces
+            const divId = `${type}-${day}-${name}`;
+            const tableDiv = document.getElementById(divId);
+
+            // Hide all other tables in the same category for this day
+            document.querySelectorAll(`.scheduleTableContainer[id^="${type}-${day}-"]`).forEach(d => {
+                if(d.id !== divId) d.style.display = "none";
+            });
+
+            // Toggle current
+            tableDiv.style.display = tableDiv.style.display === "none" ? "block" : "none";
+        });
+    });
+
+</script>
+
+<style>
+
+    .categoryBtnsRow {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+        .categoryContainer {
+            display: flex;
+            flex-direction: column; /* vertical stack: buttons on top, table below */
+            margin-bottom: 15px;
+        }
+
+        .categoryBtnsRow {
+            display: flex;
+            flex-wrap: wrap; /* multiple buttons in a row */
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+
+        .blueBtn {
+            background-color: #047eaf;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+            .blueBtn:hover {
+                background-color: #035f82;
+            }
+
+
+    .blueBtn {
+        background-color: #047eaf;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+        .blueBtn:hover {
+            background-color: #035f82;
+        }
+
+    .admPanels {
+        display: flex;
+        gap: 20px;
+        align-items: flex-start;
+        margin: 20px;
+    }
+
+    .admMenu {
+        width: 220px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        background-color: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .sideBtn {
+        padding: 10px;
+        border: none;
+        background-color: #047eaf;
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+        width: 100%;
+        text-align: left;
+    }
+
+        .sideBtn:hover {
+            background-color: #035f82;
+        }
+
+    .admPanels {
+        display: flex;
+        gap: 20px;
+        align-items: flex-start;
+        margin: 20px;
+    }
+
+    .schedulePanel {
+        flex: 1;
+        background-color: white;
+        padding: 20px;
+        border-radius: 10px;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+
+    .scheduleTable {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+
+        .scheduleTable th, .scheduleTable td {
+            border: 1px solid #ccc;
+            padding: 6px;
+            text-align: center;
+        }
+
+        .scheduleTable th {
+            background-color: #047eaf;
+            color: white;
+        }
+
+</style>

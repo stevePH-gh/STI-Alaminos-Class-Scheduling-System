@@ -1,0 +1,123 @@
+﻿@page
+@model Class_Management.Pages.loginModel
+
+@{
+}				<!-- MOVED FROM PAGES -->
+<div class="mainDes">
+	<div class="logoCnt" style="font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif; background-color: yellow">
+		<img src="~/images/sti.png" style="height: 70px; float: left" /><h1 class="display-4" style="padding-left: 100px">Alaminos</h1>
+	</div>
+</div>
+
+<div class="loginBlock">
+	<div class="loginBlockCnt">
+		<h1>Welcome</h1>
+
+		<form method="post">
+			<input id="usernameBox" name="Email" type="text" placeholder="Email" value="@Model.Email" required />
+
+			<div class="passwordBox">
+				<input id="usernamePass" name="Password" type="password" placeholder="User Password" autocomplete="new-password" value="@Model.Password" required />
+				<span id="togglePass">
+					<img id="passVisBtn"
+						 src="/images/icons/icon_pass-show.png"
+						 data-show="/images/icons/icon_pass-show.png"
+						 data-hide="/images/icons/icon_pass-hide.png"
+						 alt="Show password" />
+				</span>
+			</div>
+
+			<!-- Display error message -->
+			@if (!string.IsNullOrEmpty(Model.Message))
+			{
+				<p style="color: yellow; text-align: center;">@Model.Message</p>
+			}
+
+			<button type="submit" class="btn btn-success">Login</button>
+			<a id="createAccount" asp-page="/Signup">Create Account</a>
+		</form>
+		
+	</div>
+	<p class="menuTabs" onclick="window.location.href='@Url.Page("/Index")'">Back</p>
+</div>
+
+<style>
+
+.loginBlock {
+	display: flex;
+	align-items: center;
+	align-content: center;
+	justify-content: center;
+	height: 300px;
+	background-color: #eee;
+	border-radius: 10px;
+	color: white;
+}
+	
+.loginBlockCnt {
+	background-color: #047eaf;
+	padding: 20px;
+	border-radius: 5px;
+}
+
+#usernameBox {
+	width: 221px;
+}
+
+.togglePass {
+	position: absolute;
+	right: 5px;
+	top: 50%;
+	transform: translateY(-50%);
+	cursor: pointer;
+}
+
+.passwordBox {
+	position: relative;
+	width: max-content;
+}
+
+.passwordBox input {
+	padding-right: 30px; /* makes space for the icon */
+}
+
+#togglePass {
+	position: absolute;
+	right: 5px;
+	top: 50%;
+	transform: translateY(-50%);
+	cursor: pointer;
+}
+
+#passVisBtn {
+	width: 20px;
+	height: 20px;
+	object-fit: contain;
+}
+
+#buttonLogin {
+	display: inline-block;
+}
+#createAccount {
+	color: white;
+}
+</style>
+
+<script>
+	document.addEventListener('DOMContentLoaded', () => {
+	  const passwordInput = document.getElementById('usernamePass');
+	  const toggleBtn = document.getElementById('togglePass');
+	  const passIcon = document.getElementById('passVisBtn');
+
+	  toggleBtn.addEventListener('click', () => {
+		const isPassword = passwordInput.type === 'password';
+		passwordInput.type = isPassword ? 'text' : 'password';
+
+		passIcon.src = isPassword ? passIcon.dataset.hide : passIcon.dataset.show;
+		passIcon.alt = isPassword ? 'Hide password' : 'Show password';
+	  });
+	});
+
+</script>
+
+	 

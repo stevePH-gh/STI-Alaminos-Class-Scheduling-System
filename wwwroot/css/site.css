@@ -1,0 +1,124 @@
+
+
+/* =============== GENERIC VALUES ================= */
+
+.exportBtn {
+    background-color: #2ecc71;
+    color: white;
+    border: none;
+    padding: 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    width: 100%;
+    margin-bottom: 25px;
+    font-size: 17px;
+    font-weight: bold;
+}
+
+
+    .exportBtn:hover {
+        background-color: #27ae60;
+    }
+
+#genericBB {
+    display: block;
+    background-color: #047eaf;
+    border-radius: 3px;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    color: white;
+    transition: 0.2s;
+}
+
+    #genericBB:hover {
+        background-color: #035f82;
+        transform: translateY(-5px);
+    }
+
+/* ================================================ */
+
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+    margin-bottom: 60px;
+    background-color: rgb(231, 231, 231);
+    /*
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    */
+    user-select: none;
+}
+
+/* MAIN DIV CONTROLS */
+
+.mainDes {
+    display: grid;
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+    grid-auto-rows: auto;
+    gap: 8px;
+    padding: 8px;
+}
+
+.mainDes > div {
+    background: white;
+    border-radius: 3px;
+    padding: 10px;
+}
+
+                            /* logo PROPRERTIES */
+
+.logoCnt {
+    grid-column: span 4 / span 2;
+    color: #047eaf;
+    background-color: yellow;
+    align-items: center;
+}
+
+                                         /* MENU PROPRERTIES */
+
+.menuCnt {
+    grid-row: span 4 / span 4;
+    grid-row-start: 2;
+    
+}
+.menuTabs {
+    display: block;
+    background-color: #047eaf;
+    border-radius: 3px;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    color: white;
+    transition: 0.2s;
+    width: 200px;
+}
+    .menuTabs:hover {
+        background-color: #035f82;
+    }
+
+
+/* [ REMOVAL ID: sitecss001 ] */

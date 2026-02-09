@@ -1,0 +1,886 @@
+﻿@page
+@model Class_Management.Pages.AdminModel
+@{
+}
+
+<!--
+<div class="mainDes">
+    <div class="logoCnt" style="font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif; background-color: yellow">
+        <img src="~/images/sti.png" style="height: 70px; float: left" />
+        <h1 class="display-4" style="padding-left: 100px">Alaminos</h1>
+    </div>
+</div>
+-->
+<div style="display:flex; align-content:center">
+	<p class="menuTabs" id="genericBB" onclick="window.location.href='@Url.Page("/Overview")'"><= Back</p>
+	<h1><b>Class Scheduling System</b></h1>
+</div>
+
+<!-- ⭐ DAY HEADER WITH ARROWS -->
+<div class="dayHeader" id="dayHeader"
+     style="display:flex; align-items:center; justify-content:center; gap:30px; user-select:none;">
+
+    <button id="prevDayBtn" class="dayBtn">&#8249;</button>
+    <span id="currentDay" style="font-size:22px; font-weight:bold;">MONDAY</span>
+    <button id="nextDayBtn" class="dayBtn">&#8250;</button>
+
+</div>
+<!--  -->
+
+<div id="timeOverlay"
+     style="position:absolute; top:0; left:0; right:0; height:0;
+            background:rgba(0,140,200,0.18);
+            pointer-events:none; z-index:5; display:none;">
+</div>
+
+<div class="scheduleGrid">
+    <div class="timePanel" id="timePanel">
+        <div class="timeLabelsSpacer"></div>
+    </div>
+
+    <div class="dayPanel"> <!-- ETO UNG MAAYOS PA  -->
+
+        <div class="dayLabels roomsHeader" id="dayLabels"></div>
+
+        <div class="dayBody" id="dayBody"></div>
+    </div>
+</div>
+
+<div class="blockModal" id="blockModal" style="display:none">
+    <form method="post" asp-page-handler="AddSchedule">
+        <input type="hidden" id="bmDay" name="Day" value="MONDAY" />
+
+        <input type="hidden" id="bmStart" name="Start" />
+        <input type="hidden" id="bmEnd" name="End" />
+        <input type="hidden" id="bmRoom" name="Room" />
+
+        <label>
+            Instructor
+            <select name="Instructor" id="bmInstructor" required>
+                <option value="" disabled selected>Select Instructor</option>
+                @foreach (var instructor in Model.Instructors)
+                {
+                    <option value="@instructor.FirstName @instructor.LastName">
+                        @instructor.FirstName @instructor.LastName
+                    </option>
+                }
+            </select>
+        </label>
+
+        <label>
+            Subject
+            <select name="Subject" id="bmSubject" required>
+                <option value="" disabled selected>Select Subject</option>
+                @foreach (var subject in Model.Subjects)
+                {
+                    <option value="@subject.SubjectName">
+                        @subject.Code - @subject.SubjectName
+                    </option>
+                }
+            </select>
+        </label>
+
+
+        <label>
+            Section / Course
+            <select name="SectionName" id="bmSection" required>
+                <option value="" disabled selected>Select Course</option>
+                @foreach (var course in Model.Courses)
+                {
+                    <option value="@course.Name">@course.Name</option>
+                }
+            </select>
+            Section ID
+            <input type="text" name="SectionID" id="bmSectionID"
+                   style="text-transform: uppercase;"
+                   oninput="this.value = this.value.toUpperCase();"
+                   placeholder="eg: 2A, 1C, 3C" />
+
+        </label>
+
+        <label>
+            Type
+            <select name="Type" id="bmType">
+                <option value="Lecture">Lecture</option>
+                <option value="Laboratory">Laboratory</option>
+            </select>
+        </label>
+
+        <div class="bmActions">
+            <button type="submit">Save</button>
+            <button type="button" id="bmCancel">Cancel</button>
+        </div>
+
+        <label>End Time (Optional Increase/Decrease Time)</label>
+        <input type="time" id="endTimeInput" class="form-control" />
+
+    </form>
+</div>
+
+<div id="scheduleTooltip" style="position:absolute; display:none; z-index:10000; background:#fff; border:1px solid #ccc; padding:8px; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.2); font-size:13px; pointer-events:none;"></div>
+
+<div id="conflictBanner" style="
+    position: fixed;
+    top: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #e74c3c;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 6px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    font-weight: bold;
+    z-index: 9999;
+    transition: top 0.5s ease-in-out;
+">
+</div>
+
+<script>
+    window.addEventListener("DOMContentLoaded", () => {
+        const conflictMessage = '@TempData["ScheduleConflict"]';
+        const successMessage = '@TempData["ScheduleSuccess"]';
+        const banner = document.getElementById("conflictBanner");
+
+        if(conflictMessage){
+            banner.textContent = conflictMessage;
+            banner.style.background = "#e74c3c"; // red
+        }
+        else if(successMessage){
+            banner.textContent = successMessage;
+            banner.style.background = "#2ecc71"; // green
+        }
+
+        if(conflictMessage || successMessage){
+            banner.style.top = "20px"; // slide down
+
+            setTimeout(() => {
+                banner.style.top = "-60px";
+            }, 4000);
+        }
+    });
+
+
+    // ===================================================================================
+    // DATABASES CONNECTIONS
+
+    // Serialize Days schedules to JS
+    const mondaySchedules   = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MondaySchedules ?? new List<Class_Management.Models.ScheduleMonday>()));
+    const tuesdaySchedules  = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.TuesdaySchedules ?? new List<Class_Management.Models.ScheduleTuesday>()));
+    const wednesdaySchedules= @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.WednesdaySchedules ?? new List<Class_Management.Models.ScheduleWednesday>()));
+    const thursdaySchedules = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ThursdaySchedules ?? new List<Class_Management.Models.ScheduleThursday>()));
+    const fridaySchedules   = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.FridaySchedules ?? new List<Class_Management.Models.ScheduleFriday>()));
+    const saturdaySchedules = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SaturdaySchedules ?? new List<Class_Management.Models.ScheduleSaturday>()));
+
+        // Instructor list with type
+    const instructors = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Instructors.Select(i => new { i.FirstName, i.LastName, i.Type })));
+
+    // Subjects list with Type
+    const subjects = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Subjects.Select(s => new { s.SubjectName, s.Code, s.Type })));
+
+    // Courses list with Type
+    const courses = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Courses.Select(c => new { c.Name})));
+
+    const rooms     = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Rooms?.Select(r => r.RoomName) ?? new List<string>()));
+    const roomsData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Rooms?.Select(r => r.Type) ?? new List<string>()));
+
+    // ===================================================================================
+
+    const days = ["MONDAY","TUESDAY","WEDNESDAY","THURSDAY","FRIDAY","SATURDAY"];
+    let currentDayIndex = 0;
+
+    const dayLabel = document.getElementById("currentDay");
+    const dayHeader = document.getElementById("dayHeader");
+    const prevDayBtn = document.getElementById("prevDayBtn");
+    const nextDayBtn = document.getElementById("nextDayBtn");
+
+    
+
+    
+    const startHour = 7;
+    const endHour = 17;
+    const slotHeight = 25;
+
+    const timePanel = document.getElementById("timePanel");
+    const dayBody = document.getElementById("dayBody");
+    const dayLabels = document.getElementById("dayLabels");
+
+    const blockModal = document.getElementById("blockModal");
+    const bmInstructor = document.getElementById("bmInstructor");
+    const bmSubject = document.getElementById("bmSubject");
+    const bmSection = document.getElementById("bmSection");
+    const bmType = document.getElementById("bmType");
+    const bmSave = document.getElementById("bmSave");
+    const bmCancel = document.getElementById("bmCancel");
+
+    let isSelecting = false;
+    let selStartIndex = null;
+    let selEndIndex = null;
+    let selRoomIndex = null;
+    const slots = [];
+
+    function updateDayDisplay() {
+        const day = days[currentDayIndex];
+        dayLabel.textContent = day;
+        dayHeader.querySelector("#currentDay").textContent = day;
+        clearScheduleGrid();
+        loadScheduleForDay(day);
+    }
+
+    prevDayBtn.addEventListener("click", () => {
+        currentDayIndex = (currentDayIndex - 1 + days.length) % days.length;
+        updateDayDisplay();
+    });
+
+    nextDayBtn.addEventListener("click", () => {
+        currentDayIndex = (currentDayIndex + 1) % days.length;
+        updateDayDisplay();
+    });
+
+    function clearScheduleGrid() {
+        document.querySelectorAll(".scheduleBlock").forEach(block => block.remove());
+    }
+
+    function buildLayout() {
+        dayLabels.innerHTML = "";
+        dayBody.innerHTML = "";
+        timePanel.innerHTML = '<div class="timeLabelsSpacer"></div>';
+
+        // Room headers
+        rooms.forEach(r => {
+            const d = document.createElement("div");
+            d.className = "roomCol";
+            d.textContent = r;
+            dayLabels.appendChild(d);
+        });
+
+        const roomColumns = document.createElement("div");
+        roomColumns.className = "roomColumns";
+        dayBody.appendChild(roomColumns);
+
+        rooms.forEach((r, i) => {
+            const col = document.createElement("div");
+            col.className = "roomColumn";
+            col.dataset.room = r;
+            col.dataset.roomIndex = i;
+            roomColumns.appendChild(col);
+        });
+
+        // Time slots
+        for (let hour = startHour; hour <= endHour; hour++) {
+            for (let minute = 0; minute < 60; minute += 30) {
+                if (hour === endHour && minute > 0) break;
+                const idx = slots.length;
+                const dt = new Date(0, 0, 0, hour, minute);
+                const label = dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+
+                const timeCell = document.createElement("div");
+                timeCell.className = "timeCell";
+                timeCell.textContent = label;
+                timeCell.dataset.index = idx;
+                timePanel.appendChild(timeCell);
+
+                const cols = dayBody.querySelectorAll(".roomColumn");
+                cols.forEach(col => {
+                    const slot = document.createElement("div");
+                    slot.className = "roomSlot";
+                    slot.dataset.index = idx;
+
+                    slot.addEventListener("mousedown", (e) => {
+                        e.preventDefault();
+                        isSelecting = true;
+                        selStartIndex = idx;
+                        selEndIndex = idx;
+                        selRoomIndex = parseInt(col.dataset.roomIndex, 10);
+                        highlightColumnRange(selRoomIndex, selStartIndex, selEndIndex);
+                    });
+
+                    slot.addEventListener("mouseenter", () => {
+                        if (!isSelecting) return;
+                        const activeColIndex = parseInt(col.dataset.roomIndex, 10);
+                        if (activeColIndex !== selRoomIndex) return;
+                        selEndIndex = idx;
+                        highlightColumnRange(selRoomIndex, selStartIndex, selEndIndex);
+                    });
+
+                    slot.addEventListener("mouseup", () => {
+                        if (!isSelecting) return;
+                        isSelecting = false;
+                        selEndIndex = idx;
+                        openBlockModal(selRoomIndex, selStartIndex, selEndIndex);
+                    });
+
+                    col.appendChild(slot);
+                });
+
+                slots.push({ label, index: idx, hour, minute });
+            }
+        }
+
+        document.addEventListener("mouseup", () => { isSelecting = false; });
+    }
+
+    function clearColumnHighlights(roomIndex) {
+        const col = dayBody.querySelector(`.roomColumn[data-room-index="${roomIndex}"]`);
+        if (!col) return;
+        col.querySelectorAll(".roomSlot").forEach(s => s.classList.remove("sel"));
+
+        document.querySelectorAll(".timeCell").forEach(t => t.classList.remove("sel"));
+    }
+
+    function highlightColumnRange(roomIndex, a, b) {
+        clearColumnHighlights(roomIndex);
+
+        const [min, max] = [Math.min(a, b), Math.max(a, b)];
+        const col = dayBody.querySelector(`.roomColumn[data-room-index="${roomIndex}"]`);
+        if (!col) return;
+
+        // highlight room slots
+        col.querySelectorAll(".roomSlot").forEach(s => {
+            const idx = parseInt(s.dataset.index);
+            if (idx >= min && idx <= max) s.classList.add("sel");
+            else s.classList.remove("sel");
+        });
+
+        // highlight time cells (LEFT side)
+        document.querySelectorAll(".timeCell").forEach(t => {
+            const idx = parseInt(t.dataset.index);
+            if (idx >= min && idx <= max) t.classList.add("sel");
+            else t.classList.remove("sel");
+        });
+    }
+
+
+    function openBlockModal(roomIndex, startIdx, endIdx) {
+        bmInstructor.value = "";
+        bmSubject.value = "";
+        bmSection.value = "";
+        document.getElementById("bmSectionID").value = "";
+
+        const roomType = roomsData[roomIndex];
+        const requiredSlots = roomType === "Laboratory" ? 7 : 5; // Lab = 7 slots, Lecture = 5 slots
+
+        let minIdx = Math.min(startIdx, endIdx);
+        let maxIdx = Math.max(startIdx, endIdx);
+        const selectedSlots = maxIdx - minIdx + 1;
+
+        const banner = document.getElementById("conflictBanner");
+
+        // ---------- 1. Check slot length ----------
+        if (selectedSlots < requiredSlots) {
+            banner.textContent = roomType === "Laboratory"
+                ? "Please select at least 3 hours (7 slots) for a Laboratory."
+                : "Please select at least 2 hours (5 slots) for a Lecture.";
+            banner.style.background = "#e74c3c";
+            banner.style.top = "20px";
+            setTimeout(() => { banner.style.top = "-60px"; }, 4000);
+            clearColumnHighlights(roomIndex);
+            return;
+        }
+
+        if (selectedSlots > requiredSlots) {
+            banner.textContent = roomType === "Laboratory"
+                ? "Please select no more than 3 hours (7 slots) for a Laboratory."
+                : "Please select no more than 2 hours (5 slots) for a Lecture.";
+            banner.style.background = "#e74c3c";
+            banner.style.top = "20px";
+            setTimeout(() => { banner.style.top = "-60px"; }, 4000);
+            clearColumnHighlights(roomIndex);
+            return;
+        }
+
+        /*                                              // BROKEN
+        const col = dayBody.querySelector(`.roomColumn[data-room-index="${roomIndex}"]`);
+        const existingBlocks = col.querySelectorAll(".scheduleBlock");
+
+        for (let block of existingBlocks) {
+            const blockStart = parseInt(block.dataset.startIndex, 10);
+            const blockEnd = parseInt(block.dataset.endIndex, 10);
+
+            if (!(maxIdx < blockStart || minIdx > blockEnd)) {
+                banner.textContent = "Selected time conflicts with an existing schedule.";
+                banner.style.background = "#e74c3c";
+                banner.style.top = "20px";
+                setTimeout(() => { banner.style.top = "-60px"; }, 4000);
+                clearColumnHighlights(roomIndex);
+                return;
+            }
+        }*/
+
+        document.getElementById("bmStart").value = slotIndexToTime(minIdx);
+        document.getElementById("bmEnd").value = slotIndexToTime(maxIdx);
+        document.getElementById("bmRoom").value = rooms[roomIndex];
+        document.getElementById("bmDay").value = days[currentDayIndex];
+
+        highlightColumnRange(roomIndex, minIdx, maxIdx);
+        bmType.value = roomType === "Laboratory" ? "Laboratory" : "Lecture";
+
+        blockModal.style.display = "block";
+        blockModal.dataset.roomIndex = roomIndex;
+        blockModal.dataset.startIdx = minIdx;
+        blockModal.dataset.endIdx = maxIdx;
+
+        document.getElementById("endTimeInput").value = slotIndexToTime(maxIdx);
+
+
+    }
+
+    function validateLectureSlots(selectedSlots) {
+        const minSlots = 3; // 1 hour
+        const maxSlots = 5; // 2 hours
+
+        if (selectedSlots < minSlots) {
+            return "Lecture must be at least 1 hour (3 slots).";
+        }
+        if (selectedSlots > maxSlots) {
+            return "Lecture must be at most 2 hours (5 slots).";
+        }
+
+        return null; // valid
+    }
+
+
+    function closeBlockModal() {
+        blockModal.style.display = "none";
+        if (blockModal.dataset.roomIndex) clearColumnHighlights(parseInt(blockModal.dataset.roomIndex, 10));
+        delete blockModal.dataset.roomIndex;
+        delete blockModal.dataset.startIdx;
+        delete blockModal.dataset.endIdx;
+    }
+
+    function createBlockInRoom(roomIndex, startIdx, endIdx, meta) {
+        const col = dayBody.querySelector(`.roomColumn[data-room-index="${roomIndex}"]`);
+        if (!col) return;
+
+        const [minIdx, maxIdx] = [Math.min(startIdx, endIdx), Math.max(startIdx, endIdx)];
+        const numSlots = maxIdx - minIdx + 1;
+
+        const block = document.createElement("div");
+        block.className = "scheduleBlock";
+
+        // Start at bottom half of first slot
+        block.style.top = minIdx * slotHeight + slotHeight / 2 + "px";
+
+        // Height = (number of slots - 1) full slots
+        block.style.height = (numSlots - 1) * slotHeight + "px";
+
+        block.dataset.day = days[currentDayIndex];
+        block.dataset.room = rooms[roomIndex];
+        block.dataset.startIndex = minIdx;
+        block.dataset.endIndex = maxIdx;
+        block.dataset.instructor = meta.instructor;
+        block.dataset.subject = meta.subject;
+        block.dataset.section = meta.section;
+        block.dataset.type = meta.type;
+
+        block.innerHTML = `
+            <div class="blockInstructorRow">${meta.instructor}</div>
+            <div class="blockMiddleRow">
+                <div class="blockSubjectCol">${meta.subject}</div>
+                <div class="blockSectionCol">${meta.sectionName} ${meta.sectionID}</div>
+            </div>
+            <div class="blockTypeRow">Type: ${meta.type}</div>
+        `;
+
+
+        col.appendChild(block);
+        attachTooltipEvents(block);
+    }
+
+     function to12HourFormat(time24) {
+        let [hour, minute] = time24.split(':').map(Number);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        hour = hour % 12;
+        if (hour === 0) hour = 12; // midnight or noon
+        return `${hour}:${minute.toString().padStart(2,'0')} ${ampm}`;
+    }
+
+
+    const tooltip = document.getElementById("scheduleTooltip");
+    let tooltipTimeout;
+
+    function showTooltip(block, event) {
+        clearTimeout(tooltipTimeout);
+
+        tooltipTimeout = setTimeout(() => {
+            if (!block.dataset.startIndex || !block.dataset.endIndex) return;
+
+            const startTime24 = slotIndexToTime(parseInt(block.dataset.startIndex));
+            const endTime24 = slotIndexToTime(parseInt(block.dataset.endIndex));
+
+            tooltip.innerHTML = `
+                <b>Instructor:</b> ${block.dataset.instructor}<br>
+                <b>Subject:</b> ${block.dataset.subject}<br>
+                <b>Section:</b> ${block.dataset.section}<br>
+                <b>Type:</b> ${block.dataset.type}<br>
+                <b>Time:</b> ${to12HourFormat(startTime24)} - ${to12HourFormat(endTime24)}
+            `;
+            tooltip.style.left = event.pageX + 10 + "px";
+            tooltip.style.top = event.pageY + 10 + "px";
+            tooltip.style.display = "block";
+        }, 500);
+    }
+
+
+    function moveTooltip(event) {
+        tooltip.style.left = event.pageX + 10 + "px";
+        tooltip.style.top = event.pageY + 10 + "px";
+    }
+
+    function hideTooltip() {
+        clearTimeout(tooltipTimeout);
+        tooltip.style.display = "none";
+    }
+
+    function attachTooltipEvents(block) {
+        block.addEventListener("mouseenter", (e) => showTooltip(block, e));
+        block.addEventListener("mousemove", moveTooltip);
+        block.addEventListener("mouseleave", hideTooltip);
+    }
+
+
+
+    function copyDataset(src, dest) {
+        Array.from(src.attributes).forEach(attr => {
+            if (attr.name.startsWith("data-")) dest.setAttribute(attr.name, attr.value);
+        });
+    }
+
+    bmCancel.addEventListener("click", closeBlockModal);
+
+    if (rooms.length > 0) {
+        buildLayout();
+        updateDayDisplay();
+    } else {
+        dayLabels.innerHTML = "<p>No rooms found in database.</p>";
+    }
+
+
+     // =======================================================================
+     // DAYS SETTINGS
+     // =======================================================================
+
+    function slotIndexToTime(slotIndex) {
+        const hour = startHour + Math.floor(slotIndex / 2);
+        const minute = (slotIndex % 2) * 30;
+        return hour.toString().padStart(2,'0') + ':' + minute.toString().padStart(2,'0');
+    }
+
+
+    function loadScheduleForDay(day) {
+        console.log("Loading schedule for:", day);
+
+        let list = [];
+
+        switch (day) {
+            case "MONDAY": list = mondaySchedules; break;
+            case "TUESDAY": list = tuesdaySchedules; break;
+            case "WEDNESDAY": list = wednesdaySchedules; break;
+            case "THURSDAY": list = thursdaySchedules; break;
+            case "FRIDAY": list = fridaySchedules; break;
+            case "SATURDAY": list = saturdaySchedules; break;
+        }
+
+        if (!list) return;
+
+        list.forEach(s => {
+            const roomIndex = rooms.findIndex(r => r === s.Room);
+            if (roomIndex === -1) return;
+
+            const startParts = s.Start.split(':');
+            const endParts = s.End.split(':');
+
+            const startIndex = (parseInt(startParts[0]) - startHour) * 2 + (parseInt(startParts[1]) >= 30 ? 1 : 0);
+            const endIndex = (parseInt(endParts[0]) - startHour) * 2 + (parseInt(endParts[1]) >= 30 ? 1 : 0);
+
+            const meta = {
+                instructor: s.Instructor,
+                subject: s.Subject,
+                section: s.Section,
+                sectionName: s.Section.split(' ')[0],
+                sectionID: s.Section.split(' ')[1] || "",
+                type: s.Type
+            };
+
+            createBlockInRoom(roomIndex, startIndex, endIndex, meta);
+        });
+    }
+
+                            // INSTRUCTOR FILTERS
+    bmInstructor.addEventListener("change", () => {
+        const selectedInstructorName = bmInstructor.value;
+        const instructor = instructors.find(i => `${i.FirstName} ${i.LastName}` === selectedInstructorName);
+        if (!instructor) return;
+
+        const instructorType = instructor.Type;
+
+        // Filter Subjects by Instructor Type
+        bmSubject.innerHTML = '<option value="" disabled selected>Select Subject</option>';
+        subjects
+            .filter(s => s.Type === instructorType)
+            .forEach(s => {
+                const opt = document.createElement("option");
+                opt.value = s.SubjectName;
+                opt.textContent = `${s.Code} - ${s.SubjectName}`;
+                bmSubject.appendChild(opt);
+            });
+    });
+
+    // Ensure the edited end time is applied before submitting
+    blockModal.querySelector("form").addEventListener("submit", (e) => {
+        const endTimeInput = document.getElementById("endTimeInput").value;
+        if (endTimeInput) {
+            document.getElementById("bmEnd").value = endTimeInput;
+        }
+    });
+
+</script>
+
+
+<style>
+    .timeCell.sel {
+        background: rgba(2,126,175,0.18);
+        font-weight: bold;
+        color: #004c66;
+    }
+
+    .timeLabelsSpacer {
+        background-color: #333; /* dark grey */
+        height: 52px;
+    }
+
+
+    :root {
+        --time-panel-width: 120px;
+    }
+
+    .scheduleGrid {
+        display: flex;
+        gap: 12px;
+        margin: 20px;
+        align-items: flex-start;
+    }
+
+    .timePanel {
+        width: var(--time-panel-width);
+        border: 1px solid #bbb;
+        border-radius: 8px;
+        background: #fafafa;
+        display: flex;
+        flex-direction: column;
+        user-select: none;
+        overflow: hidden;
+    }
+
+    .timeHeaderSpacer {
+        height: 48px;
+    }
+
+    .timeLabelsSpacer {
+        height: 44px;
+    }
+
+    .dayPanel {
+        flex: 1;
+        min-width: 520px;
+        border-radius: 8px;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #bbb;
+        overflow: hidden;
+    }
+
+    .dayHeader {
+        text-align: center;
+        background: #047eaf;
+        color: #fff;
+        font-weight: 700;
+        padding: 12px;
+        border-bottom: 1px solid #ccc;
+    }
+
+    .roomsHeader {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        background: #f7f9fb;
+        border-bottom: 1px solid #999;
+        overflow: hidden;
+    }
+
+        .roomsHeader .roomCol {
+            display: flex; /* make it flex */
+            align-items: center; /* vertical center */
+            justify-content: center; /* horizontal center */
+            text-align: center; /* fallback text align */
+            padding: 10px 6px; /* reduce horizontal padding if needed */
+            font-weight: 700;
+            border-right: 1px solid #e0e0e0;
+            word-wrap: break-word; /* allow breaking long words */
+            white-space: normal; /* wrap text inside the cell */
+            line-height: 1.2; /* tighter line spacing */
+        }
+
+            .roomsHeader .roomCol:last-child {
+                border-right: none;
+            }
+
+
+    .dayBody {
+        position: relative;
+        display: block;
+        overflow: auto;
+        background: #fff;
+    }
+
+    .roomColumns {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    }
+
+    .roomColumn {
+        position: relative;
+        min-width: 120px;
+        border-left: 1px solid #eee;
+    }
+
+    .roomSlot {
+        height: 25px;
+        border-bottom: 1px solid #eee;
+        box-sizing: border-box;
+    }
+
+    .timeCell, .roomSlot {
+        height: 25px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+    }
+
+    .timeCell {
+        font-size: 14px;
+        color: #333;
+        padding: 0 6px;
+        text-align: center;
+        background: transparent;
+        border-bottom: 1px solid #ccc;
+    }
+
+    .roomSlot.sel {
+        background: rgba(2,126,175,0.12);
+    }
+    /* selection shading */
+    .roomSlot:hover {
+        background: rgba(2,126,175,0.06);
+        cursor: pointer;
+    }
+
+    .scheduleBlock {
+        position: absolute;
+        left: 6px;
+        right: 6px;
+        border-radius: 6px;
+        overflow: hidden;
+        background: #047eaf;
+        color: #fff;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+        box-sizing: border-box;
+        padding: 6px;
+        z-index: 10;
+        border-top: 2px solid #fff;
+    }
+
+        .scheduleBlock .blockInstructorRow {
+            font-weight: 700;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .scheduleBlock .blockMiddleRow {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .scheduleBlock .blockSubjectCol {
+            flex: 1;
+            font-size: 13px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .scheduleBlock .blockSectionCol {
+            width: 80px;
+            font-size: 13px;
+            text-align: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .scheduleBlock .blockTypeRow {
+            margin-top: 6px;
+            font-size: 12px;
+            opacity: 0.95;
+        }
+
+    .blockModal {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%,-50%);
+        background: #fff;
+        border: 1px solid #ccc;
+        padding: 14px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+        z-index: 9999;
+        border-radius: 8px;
+        min-width: 280px;
+    }
+
+        .blockModal input, .blockModal select {
+            width: 100%;
+            padding: 6px 8px;
+            margin-top: 6px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+
+        .blockModal label {
+            display: block;
+            font-size: 13px;
+        }
+
+    .bmActions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+    }
+
+        .bmActions button {
+            padding: 6px 10px;
+            cursor: pointer;
+        }
+
+    .dayBtn {
+        padding: 6px 14px;
+        font-size: 20px;
+        font-weight: bold;
+        cursor: pointer;
+        background-color: #025c91; /* darker blue block */
+        border: 1px solid #013f5e;
+        color: white;
+        border-radius: 4px;
+        user-select: none;
+        transition: background 0.2s;
+    }
+
+        .dayBtn:hover {
+            background-color: #014d7a; /* slightly darker on hover */
+        }
+
+</style>
